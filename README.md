@@ -62,9 +62,36 @@ Available variables:
 | `POSTGRES_PORT` | `5432` | Host port mapped to container port `5432`. |
 | `POSTGRES_PASSWORD` | `postgres_password` | Password for the default PostgreSQL admin role. |
 | `POSTGRES_NETWORK_NAME` | `pg-infra` | Shared Docker network name for dependent Compose projects. |
+| `PRICE_GRABBER_MCP_DB_USER` | `price_grabber_mcp_ro` | Local PostgreSQL login for the private read-only MCP. |
+| `PRICE_GRABBER_MCP_DB_PASSWORD` | none | Required local password for that MCP login. |
 
 For a pet project this setup intentionally keeps credentials simple. Do not reuse
 these defaults for production.
+
+## Private PostgreSQL MCP
+
+`compose.yaml` defines `postgres-mcp`, a private MCP Toolbox for Databases
+service used by Hermes to inspect the `price_grabber` database. It is not
+published to a host port; consumers on `pg-infra` reach it as
+`http://postgres-mcp:5000/mcp`.
+
+The service starts with the Toolbox `postgres` prebuilt toolset. It includes
+`execute_sql`, so its PostgreSQL role must remain least-privilege and
+read-only; Docker networking is not a substitute for database authorization.
+The configured host/origin allow-list is an additional browser-facing guard,
+not an authorization mechanism.
+
+Start or update only the MCP service:
+
+```sh
+docker compose up -d postgres-mcp
+```
+
+Stop it without changing database data:
+
+```sh
+docker compose stop postgres-mcp
+```
 
 ## Initialization Scripts
 
