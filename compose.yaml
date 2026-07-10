@@ -24,6 +24,29 @@ services:
       timeout: 5s
       retries: 10
 
+  postgres-mcp:
+    image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:1.6.0
+    container_name: postgres-mcp-price-grabber-ro
+    restart: unless-stopped
+    command:
+      - "--address=0.0.0.0"
+      - "--prebuilt=postgres"
+      - "--allowed-hosts=postgres-mcp,postgres-mcp:5000"
+      - "--allowed-origins=http://hermes"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: price_grabber
+      POSTGRES_USER: ${PRICE_GRABBER_MCP_DB_USER:-price_grabber_mcp_ro}
+      POSTGRES_PASSWORD: ${PRICE_GRABBER_MCP_DB_PASSWORD:?set PRICE_GRABBER_MCP_DB_PASSWORD in .env}
+    networks:
+      pg-infra:
+        aliases:
+          - postgres-mcp
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
 
