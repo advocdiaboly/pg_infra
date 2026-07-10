@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: pgvector/pgvector:${POSTGRES_VERSION:-pg18}
+    container_name: ${POSTGRES_CONTAINER_NAME:-postgres}
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    networks:
+      pg-infra:
+        aliases:
+          - postgres
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U postgres -d postgres",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+
+networks:
+  pg-infra:
+    name: ${POSTGRES_NETWORK_NAME:-pg-infra}
